@@ -1,0 +1,7 @@
+.vs
+.vscode
+/binary/solution
+/binary/solution_x86_x64
+*.vcxproj*
+*.sln
+TEMP
