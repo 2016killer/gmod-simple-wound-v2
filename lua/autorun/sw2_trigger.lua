@@ -101,7 +101,12 @@ SimpleWoundTrigger.GetHitGroupByPosition = function(ent, pos)
 end
 
 SimpleWoundTrigger.GetWoundScale = function(ent, hitgroup, dmgtype)
-	return (SimpleWoundTrigger.WoundScaleTable[hitgroup] or SimpleWoundTrigger.WoundScaleTable[HITGROUP_HEAD])[dmgtype] or Vector(5, 3, 3)
+	local groupTable = SimpleWoundTrigger.WoundScaleTable[hitgroup]
+	if not groupTable then
+		return nil
+	else
+		return groupTable[dmgtype]
+	end
 end
 
 

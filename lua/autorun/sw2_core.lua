@@ -631,6 +631,9 @@ if SERVER then
 		net.Broadcast()
     end
 
+	local COPY_MODIFIER = 'SimpleWound2'
+	local SerializeToolWounds
+
 	SimpleWound.ApplyWoundEasy = function(ent, easyparams)
 		if not IsValid(ent) then
 			return
@@ -640,6 +643,12 @@ if SERVER then
 		easyparams.slot = ((easyparams.slot - 1) % SimpleWound.MaxWounds) + 1
 		easyparams.shader = easyparams.shader or 'VertexDeformationVertexLit'
 
+		if easyparams.persistent then
+			ent.sw_tool_wounds = ent.sw_tool_wounds or {}
+			ent.sw_tool_wounds[easyparams.slot] = easyparams
+			duplicator.StoreEntityModifier(ent, COPY_MODIFIER, SerializeToolWounds(ent))
+		end
+
 		net.Start('sw_apply_easy')
 			net.WriteTable(easyparams)
 			net.WriteEntity(ent)
@@ -648,11 +657,96 @@ if SERVER then
 
 	SimpleWound.Reset = function(ent)
 		ent.sw_params = nil
+		ent.sw_tool_wounds = nil
+		duplicator.StoreEntityModifier(ent, COPY_MODIFIER, { slots = {} })
 
 		net.Start('sw_reset')
 			net.WriteEntity(ent)
 		net.Broadcast()
 	end
+
+	SerializeToolWounds = function(ent)
+		if not istable(ent.sw_tool_wounds) then
+			return
+		end
+
+		local slots = {}
+		for slot = 1, SimpleWound.MaxWounds do
+			local easyparams = ent.sw_tool_wounds[slot]
+			if easyparams and easyparams.ellipsoid then
+				local ellipsoid = easyparams.ellipsoid
+				local center = ellipsoid.center or Vector()
+				local angle = ellipsoid.angle or Angle()
+				local scale = ellipsoid.scale or Vector()
+
+				slots[#slots + 1] = {
+					slot = slot,
+					boneid = easyparams.boneid,
+					shader = easyparams.shader,
+					deform_texture = easyparams.deform_texture,
+					project_texture = easyparams.project_texture,
+					blood_range = easyparams.blood_range,
+					litegore_compatibility = easyparams.litegore_compatibility,
+					coordinate = easyparams.coordinate,
+					center = { center.x, center.y, center.z },
+					angle = { angle.p, angle.y, angle.r },
+					scale = { scale.x, scale.y, scale.z }
+				}
+			end
+		end
+
+		if #slots == 0 then
+			return
+		end
+
+		return {
+			slots = slots
+		}
+	end
+
+	local function RestoreToolWounds(ent, data)
+		if not IsValid(ent) or not istable(data) or not istable(data.slots) then
+			return
+		end
+
+		for _, slotData in ipairs(data.slots) do
+			local center = slotData.center or {}
+			local angle = slotData.angle or {}
+			local scale = slotData.scale or {}
+
+			local easyparams = SWEasyParams.new(
+				slotData.shader,
+				SWEllipsoid.new(
+					Vector(center[1] or 0, center[2] or 0, center[3] or 0),
+					Angle(angle[1] or 0, angle[2] or 0, angle[3] or 0),
+					Vector(scale[1] or 0, scale[2] or 0, scale[3] or 0)
+				),
+				slotData.deform_texture,
+				slotData.project_texture,
+				slotData.blood_range,
+				slotData.litegore_compatibility,
+				slotData.boneid,
+				slotData.slot
+			)
+			easyparams.persistent = true
+			easyparams.coordinate = slotData.coordinate
+
+			SimpleWound.ApplyWoundEasy(ent, easyparams)
+		end
+	end
+
+	hook.Add('PostEntityCopy', 'SimpleWound2', function(ent)
+		local copyData = SerializeToolWounds(ent)
+		if copyData then
+			duplicator.StoreEntityModifier(ent, COPY_MODIFIER, copyData)
+		end
+	end)
+
+	duplicator.RegisterEntityModifier(COPY_MODIFIER, function(ply, ent, data)
+		if IsValid(ent) then
+			RestoreToolWounds(ent, data)
+		end
+	end)
 end
 
 

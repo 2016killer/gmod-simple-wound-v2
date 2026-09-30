@@ -354,6 +354,7 @@ function TOOL:LeftClick(tr)
 			blood_range, litegore_compatibility,
 			boneid, self.WoundSlot
 		)
+		easyparams.persistent = true
 
 		SimpleWound.ApplyWoundEasy(ent, easyparams)
 	end
