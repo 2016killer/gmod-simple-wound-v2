@@ -101,7 +101,7 @@ if CLIENT then
 			return
 		end
 
-		local releaseURL = 'https://github.com/Athlete41/tempproject/releases/latest'
+		local releaseURL = 'https://github.com/2016killer/gmod-simple-wound-v2/releases/latest'
 		local frame = vgui.Create('DFrame')
 		missingModuleDialog = frame
 
