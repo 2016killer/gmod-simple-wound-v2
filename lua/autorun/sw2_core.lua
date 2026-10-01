@@ -634,6 +634,13 @@ if SERVER then
 	local COPY_MODIFIER = 'SimpleWound2'
 	local SerializeToolWounds
 
+	-- ent.sw_tool_wounds = {
+	--   shader, deform_texture, project_texture, blood_range,
+	--   litegore_compatibility, coordinate,
+	--   slots = {
+	--     [slot] = { boneid, center = Vector(), angle = Angle(), scale = Vector() }
+	--   }
+	-- }
 	SimpleWound.ApplyWoundEasy = function(ent, easyparams)
 		if not IsValid(ent) then
 			return
@@ -644,8 +651,25 @@ if SERVER then
 		easyparams.shader = easyparams.shader or 'VertexDeformationVertexLit'
 
 		if easyparams.persistent then
-			ent.sw_tool_wounds = ent.sw_tool_wounds or {}
-			ent.sw_tool_wounds[easyparams.slot] = easyparams
+			local toolWounds = ent.sw_tool_wounds
+			if not istable(toolWounds) or not istable(toolWounds.slots) then
+				toolWounds = { slots = {} }
+				ent.sw_tool_wounds = toolWounds
+			end
+
+			toolWounds.shader = easyparams.shader
+			toolWounds.deform_texture = easyparams.deform_texture
+			toolWounds.project_texture = easyparams.project_texture
+			toolWounds.blood_range = easyparams.blood_range
+			toolWounds.litegore_compatibility = easyparams.litegore_compatibility
+			toolWounds.coordinate = easyparams.coordinate
+			toolWounds.slots[easyparams.slot] = {
+				boneid = easyparams.boneid,
+				center = easyparams.ellipsoid.center,
+				angle = easyparams.ellipsoid.angle,
+				scale = easyparams.ellipsoid.scale
+			}
+
 			duplicator.StoreEntityModifier(ent, COPY_MODIFIER, SerializeToolWounds(ent))
 		end
 
@@ -666,28 +690,22 @@ if SERVER then
 	end
 
 	SerializeToolWounds = function(ent)
-		if not istable(ent.sw_tool_wounds) then
+		local toolWounds = ent.sw_tool_wounds
+		if not istable(toolWounds) or not istable(toolWounds.slots) then
 			return
 		end
 
 		local slots = {}
 		for slot = 1, SimpleWound.MaxWounds do
-			local easyparams = ent.sw_tool_wounds[slot]
-			if easyparams and easyparams.ellipsoid then
-				local ellipsoid = easyparams.ellipsoid
-				local center = ellipsoid.center or Vector()
-				local angle = ellipsoid.angle or Angle()
-				local scale = ellipsoid.scale or Vector()
+			local wound = toolWounds.slots[slot]
+			if wound then
+				local center = wound.center or Vector()
+				local angle = wound.angle or Angle()
+				local scale = wound.scale or Vector()
 
 				slots[#slots + 1] = {
 					slot = slot,
-					boneid = easyparams.boneid,
-					shader = easyparams.shader,
-					deform_texture = easyparams.deform_texture,
-					project_texture = easyparams.project_texture,
-					blood_range = easyparams.blood_range,
-					litegore_compatibility = easyparams.litegore_compatibility,
-					coordinate = easyparams.coordinate,
+					boneid = wound.boneid,
 					center = { center.x, center.y, center.z },
 					angle = { angle.p, angle.y, angle.r },
 					scale = { scale.x, scale.y, scale.z }
@@ -700,6 +718,12 @@ if SERVER then
 		end
 
 		return {
+			shader = toolWounds.shader,
+			deform_texture = toolWounds.deform_texture,
+			project_texture = toolWounds.project_texture,
+			blood_range = toolWounds.blood_range,
+			litegore_compatibility = toolWounds.litegore_compatibility,
+			coordinate = toolWounds.coordinate,
 			slots = slots
 		}
 	end
@@ -715,21 +739,21 @@ if SERVER then
 			local scale = slotData.scale or {}
 
 			local easyparams = SWEasyParams.new(
-				slotData.shader,
+				data.shader,
 				SWEllipsoid.new(
 					Vector(center[1] or 0, center[2] or 0, center[3] or 0),
 					Angle(angle[1] or 0, angle[2] or 0, angle[3] or 0),
 					Vector(scale[1] or 0, scale[2] or 0, scale[3] or 0)
 				),
-				slotData.deform_texture,
-				slotData.project_texture,
-				slotData.blood_range,
-				slotData.litegore_compatibility,
+				data.deform_texture,
+				data.project_texture,
+				data.blood_range,
+				data.litegore_compatibility,
 				slotData.boneid,
 				slotData.slot
 			)
 			easyparams.persistent = true
-			easyparams.coordinate = slotData.coordinate
+			easyparams.coordinate = data.coordinate
 
 			SimpleWound.ApplyWoundEasy(ent, easyparams)
 		end
