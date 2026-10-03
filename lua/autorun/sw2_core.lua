@@ -155,7 +155,7 @@ if CLIENT then
 
     SimpleWound = SimpleWound or {}
 	SimpleWound.MaxWounds = 3
-    SimpleWound.Version = 'Beta'
+    SimpleWound.Version = '2.0.1'
     print('[Simple Wound]: LUA VERSION ' .. SimpleWound.Version)
 
     SimpleWound.MaterialsCache = {}
@@ -620,7 +620,7 @@ if SERVER then
 
     SimpleWound = SimpleWound or {}
 	SimpleWound.MaxWounds = 3
-    SimpleWound.Version = 'Beta'
+    SimpleWound.Version = '2.0.1'
 
 	SimpleWound.ApplyWound = function(ent, swparams)
 		ent.sw_params = swparams
