@@ -16,6 +16,7 @@ struct VS_INPUT
 	float2 vBaseTexCoord	: TEXCOORD0;
 	float4 vBoneWeights		: BLENDWEIGHT;
 	float4 vBoneIndices		: BLENDINDICES;
+	float3 vPosFlex			: POSITION1;
 };
 
 struct VS_OUTPUT
@@ -126,10 +127,13 @@ VS_OUTPUT main( const VS_INPUT v )
 	o.vWoundData1 = wd1;
 	o.vWoundData2 = wd2;
 
+	float3 morphedPos = v.vPos.xyz;
+	ApplyMorph( v.vPosFlex, morphedPos );
+
 	float3 worldPos;
 	SkinPosition(
 		g_bSkinning,
-		v.vPos,
+		float4( morphedPos, 1 ),
 		v.vBoneWeights, v.vBoneIndices,
 		worldPos );
 

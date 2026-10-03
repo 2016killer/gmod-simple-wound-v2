@@ -31,6 +31,7 @@ struct VS_INPUT
 	float2 vBaseTexCoord			: TEXCOORD0;
 	float4 vBoneWeights				: BLENDWEIGHT;
 	float4 vBoneIndices				: BLENDINDICES;
+	float3 vPosFlex					: POSITION1;
 };
 
 struct VS_OUTPUT
@@ -196,6 +197,7 @@ VS_OUTPUT main( const VS_INPUT v )
 	// 归一化空间里 dist=1 是椭球表面, 所以变形半径硬编码为 1.0
 	float deformAmount = step( bestDist, WOUND_DEFORM_SIZE );
 	float3 finalModelPos = lerp( modelPos, selectedDpos, deformAmount );
+	ApplyMorph( v.vPosFlex, finalModelPos );
 
 	// ---- 蒙皮 ----
 	float3 worldPos;

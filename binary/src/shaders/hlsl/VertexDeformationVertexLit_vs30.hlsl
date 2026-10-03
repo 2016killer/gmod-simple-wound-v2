@@ -26,6 +26,8 @@ struct VS_INPUT
 	float4 vBoneIndices	: BLENDINDICES;
 	float4 vNormal		: NORMAL;
 	float4 vTexCoord0	: TEXCOORD0;
+	float3 vPosFlex		: POSITION1;
+	float3 vNormalFlex	: NORMAL1;
 #if BUMPMAP
 	float4 vUserData	: TANGENT;
 #endif
@@ -181,6 +183,13 @@ VS_OUTPUT main( const VS_INPUT v )
 	float3 finalModelNormal = normalize(
 		lerp( vNormal, selectedDnormal, deformFactor )
 	);
+
+#if BUMPMAP
+	ApplyMorph( v.vPosFlex, v.vNormalFlex, finalModelPos, finalModelNormal, vTangent.xyz );
+#else
+	ApplyMorph( v.vPosFlex, v.vNormalFlex, finalModelPos, finalModelNormal );
+#endif
+	finalModelNormal = normalize( finalModelNormal );
 
 #if BUMPMAP
 	float3 worldTangentS;

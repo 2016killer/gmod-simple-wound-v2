@@ -26,6 +26,8 @@ struct VS_INPUT
 	float4 vBoneIndices	: BLENDINDICES;
 	float4 vNormal		: NORMAL;
 	float4 vTexCoord0	: TEXCOORD0;
+	float3 vPosFlex		: POSITION1;
+	float3 vNormalFlex	: NORMAL1;
 #if BUMPMAP
 	float4 vUserData	: TANGENT;
 #endif
@@ -105,14 +107,19 @@ VS_OUTPUT main( const VS_INPUT v )
 	float3 vNormal;
 	float3 worldNormal;
 	float3 worldPos;
+	float3 morphedPos = modelPos;
+	float3 morphedNormal;
 
 #if BUMPMAP
 	float4 vTangent;
 	DecompressVertex_NormalTangent( v.vNormal, v.vUserData, vNormal, vTangent );
+	morphedNormal = vNormal;
+	ApplyMorph( v.vPosFlex, v.vNormalFlex, morphedPos, morphedNormal, vTangent.xyz );
+	morphedNormal = normalize( morphedNormal );
 	float3 worldTangentS;
 	float3 worldTangentT;
 	SkinPositionNormalAndTangentSpace(
-		g_bSkinning, v.vPos, vNormal, vTangent,
+		g_bSkinning, float4( morphedPos, 1 ), morphedNormal, vTangent,
 		v.vBoneWeights, v.vBoneIndices,
 		worldPos, worldNormal, worldTangentS, worldTangentT
 	);
@@ -122,8 +129,11 @@ VS_OUTPUT main( const VS_INPUT v )
 	o.worldTangent = float4( worldTangentS, vTangent.w );
 #else
 	DecompressVertex_Normal( v.vNormal, vNormal );
+	morphedNormal = vNormal;
+	ApplyMorph( v.vPosFlex, v.vNormalFlex, morphedPos, morphedNormal );
+	morphedNormal = normalize( morphedNormal );
 	SkinPositionAndNormal(
-		g_bSkinning, v.vPos, vNormal,
+		g_bSkinning, float4( morphedPos, 1 ), morphedNormal,
 		v.vBoneWeights, v.vBoneIndices,
 		worldPos, worldNormal
 	);
