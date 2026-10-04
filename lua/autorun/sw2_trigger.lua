@@ -3,6 +3,26 @@ AddCSLuaFile()
 SimpleWoundTrigger = SimpleWoundTrigger or {}
 
 SimpleWoundTrigger.WoundScaleTable = SimpleWoundTrigger.WoundScaleTable or {
+	[HITGROUP_GENERIC] = {
+		[DMG_BULLET] = Vector(5, 3, 3),        -- 子弹伤
+		[DMG_SLASH] = Vector(5, 3, 3),       -- 刀伤
+		[DMG_BLAST] = Vector(5, 3, 3),         -- 爆炸伤
+		[DMG_CLUB] = Vector(5, 3, 3),          -- 钝器伤
+		[DMG_PLASMA] = Vector(5, 3, 3),        -- 等离子伤
+		[DMG_BLAST_SURFACE] = Vector(5, 3, 3), -- 表面爆炸伤
+
+		[DMG_AIRBOAT] = Vector(5, 3, 3),       -- 气垫船枪伤
+		[bit.bor(DMG_AIRBOAT, DMG_BULLET)] = Vector(5, 3, 3),
+
+		[DMG_BUCKSHOT] = Vector(5, 3, 3),      -- 霰弹伤
+		[bit.bor(DMG_BUCKSHOT, DMG_BULLET)] = Vector(5, 3, 3),
+		    
+		[DMG_SNIPER] = Vector(5, 3, 3),        -- 狙击伤
+		[bit.bor(DMG_SNIPER, DMG_BULLET)] = Vector(5, 3, 3),
+
+
+		[DMG_MISSILEDEFENSE] = Vector(5, 3, 3) -- 导弹类伤害	
+	},
 	[HITGROUP_HEAD] = {
 		[DMG_BULLET] = Vector(5, 3, 3),        -- 子弹伤
 		[DMG_SLASH] = Vector(5, 5, 1.5),       -- 刀伤
@@ -101,6 +121,7 @@ SimpleWoundTrigger.GetHitGroupByPosition = function(ent, pos)
 end
 
 SimpleWoundTrigger.GetWoundScale = function(ent, hitgroup, dmgtype)
+	-- print("获取伤口缩放: 实体=", ent, "命中部位=", hitgroup, "伤害类型=", dmgtype)
 	local groupTable = SimpleWoundTrigger.WoundScaleTable[hitgroup]
 	if not groupTable then
 		return nil
@@ -250,7 +271,7 @@ if SERVER then
 		woundtransform:SetAngles(dir:Angle())
 		woundtransform:SetScale(woundscale)
 		woundtransform = boneMatrix:GetInverse() * woundtransform
-
+		-- print("伤口变换矩阵:", woundtransform, "骨骼ID:", boneid, "伤口缩放:", woundscale)
 		return woundtransform, boneid
 	end
 
