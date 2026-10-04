@@ -329,26 +329,65 @@ if SERVER then
 	end)
 
 	hook.Add('CreateEntityRagdoll', 'SimpleWoundTrigger', function(ent, rag)
-		if not istable(ent.sw_trigger_params) then
-			return
-		end
+		local applied_count = 0
+		local woundparams = ent.sw_trigger_params
 
-		for _, wound in ipairs(ent.sw_trigger_params) do
-			local succ, err = pcall(
-				Apply,
-				rag,
-				wound.pos,
-				wound.dir,
-				wound.hitgroup,
-				wound.dmgtype
-			)
+		if istable(woundparams) then
+			-- print(ent, "一开始就有伤口参数，数量: " .. #woundparams)
+			for _, wound in ipairs(woundparams) do
+				local succ, err = pcall(
+					Apply,
+					rag,
+					wound.pos,
+					wound.dir,
+					wound.hitgroup,
+					wound.dmgtype
+				)
 
-			if not succ then
-				print(err)
+				if not succ then
+					print(err)
+				end
 			end
+
+			applied_count = #woundparams
 		end
 
-		ent.sw_trigger_params = nil
+		timer.Simple(FrameTime() * 5, function()
+			if not IsValid(ent) or not IsValid(rag) then
+				-- print("实体被移除，无法应用伤口参数")
+				return
+			end
+
+			local latest_params = ent.sw_trigger_params
+			if not istable(latest_params) then
+				-- print(ent, "没有伤口参数需要应用")
+				return
+			end
+
+			if #latest_params > applied_count then
+				-- print(ent, "有新的伤口参数需要应用，数量: " .. (#latest_params - applied_count))
+				for i = applied_count + 1, #latest_params do
+					local wound = latest_params[i]
+
+					local succ, err = pcall(
+						Apply,
+						rag,
+						wound.pos,
+						wound.dir,
+						wound.hitgroup,
+						wound.dmgtype
+					)
+
+					if not succ then
+						-- print(err)
+					end
+				end
+			else
+				-- print(ent, "没有新的伤口参数需要应用")
+			end
+
+			ent.sw_trigger_params = nil
+		end)
 	end)
 end
 
@@ -427,12 +466,24 @@ if CLIENT then
 				ErrorNoHalt(string.format('[Simple Wound]: %s\n', err))
 			end
 		else
-			timer.Simple(0.3, function()
+			if not IsValid(Entity(ent)) then
+				-- 重试机制
+				timer.Simple(0.3, function()
+					if not IsValid(Entity(ent)) then
+						return
+					end
+
+					local succ, err = pcall(Apply, Entity(ent), woundLocalTransform, boneid)
+					if not succ then
+						ErrorNoHalt(string.format('[Simple Wound]: %s\n', err))
+					end
+				end)
+			else
 				local succ, err = pcall(Apply, Entity(ent), woundLocalTransform, boneid)
 				if not succ then
 					ErrorNoHalt(string.format('[Simple Wound]: %s\n', err))
 				end
-			end)
+			end
 		end
     end)
 
@@ -461,7 +512,7 @@ if CLIENT then
 		})
 	end)
 
-	local function ApplyClientsideRagdollWounds(entity, ragdoll, attempt)
+	hook.Add('CreateClientsideRagdoll', 'SimpleWoundTrigger', function(entity, ragdoll)
 		if not IsValid(entity) or not IsValid(ragdoll) then
 			return
 		end
@@ -470,27 +521,58 @@ if CLIENT then
 			return
 		end
 
+		local timer_name = 'sw2_clientside_wound_' .. math.random(1, 2147483647)
+		local applied_count = 0
 		local wounds = SimpleWoundTrigger.ClientWoundData[entity]
-		if not istable(wounds) then
-			if attempt < 20 then
-				timer.Simple(0.1, function()
-					ApplyClientsideRagdollWounds(entity, ragdoll, attempt + 1)
-				end)
+
+		if istable(wounds) then
+			-- print(entity, "一开始就有伤口参数，数量: " .. #wounds)
+			for _, wound in ipairs(wounds) do
+				local succ, err = pcall(Apply, ragdoll, wound.woundLocalTransform, wound.boneid)
+				if not succ then
+					ErrorNoHalt(string.format('[Simple Wound]: %s\n', err))
+				end
 			end
-			return
+
+			applied_count = #wounds
 		end
 
-		for _, wound in ipairs(wounds) do
-			local succ, err = pcall(Apply, ragdoll, wound.woundLocalTransform, wound.boneid)
-			if not succ then
-				ErrorNoHalt(string.format('[Simple Wound]: %s\n', err))
+		local has_initial_data = applied_count > 0
+		local attempts = has_initial_data and 1 or 20
+		local delay = 0.1
+
+		timer.Create(timer_name, delay, attempts, function()
+			if not IsValid(entity) or not IsValid(ragdoll) then
+				-- print("实体被移除，无法应用伤口参数")
+				timer.Remove(timer_name)
+				return
 			end
-		end
 
-		SimpleWoundTrigger.ClientWoundData[entity] = nil
-	end
+			local latest = SimpleWoundTrigger.ClientWoundData[entity]
+			if not istable(latest) then
+				if has_initial_data then
+					SimpleWoundTrigger.ClientWoundData[entity] = nil
+				end
+				return
+			end
 
-	hook.Add('CreateClientsideRagdoll', 'SimpleWoundTrigger', function(entity, ragdoll)
-		ApplyClientsideRagdollWounds(entity, ragdoll, 0)
+			if #latest > applied_count then
+				for i = applied_count + 1, #latest do
+					local wound = latest[i]
+					local succ, err = pcall(Apply, ragdoll, wound.woundLocalTransform, wound.boneid)
+					if not succ then
+						ErrorNoHalt(string.format('[Simple Wound]: %s\n', err))
+					end
+				end
+
+				applied_count = #latest
+				-- print(entity, "应用了新的伤口参数，数量: " .. #latest)
+			else
+				-- print(entity, "没有新的伤口参数需要应用")
+			end
+
+			SimpleWoundTrigger.ClientWoundData[entity] = nil
+			timer.Remove(timer_name)
+		end)
 	end)
 end
