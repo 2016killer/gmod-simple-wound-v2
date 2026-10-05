@@ -102,20 +102,57 @@ if CLIENT then
 		end
 
 		local releaseURL = 'https://github.com/2016killer/gmod-simple-wound-v2/releases/latest'
+
+
+
+		local bits
+		if jit.version == 'LuaJIT 2.0.4' then
+			bits = language.GetPhrase('sw2.bitness.32')
+		elseif jit.version == 'LuaJIT 2.1.0-beta3' then
+			bits = language.GetPhrase('sw2.bitness.64')
+		else
+			bits = language.GetPhrase('sw2.bitness.unknown')
+		end
+		
+		local branch_name
+		if BRANCH == 'unknown' then
+			branch_name = language.GetPhrase('sw2.branch.main')
+		elseif BRANCH == 'x86-64' then
+			branch_name = language.GetPhrase('sw2.branch.x86_64')
+		else
+			branch_name = BRANCH
+		end
+
 		local frame = vgui.Create('DFrame')
 		missingModuleDialog = frame
 
 		frame:SetTitle(language.GetPhrase('#sw2.missing_module'))
-		frame:SetSize(520, 190)
+		frame:SetSize(560, 340)
 		frame:Center()
 		frame:MakePopup()
 		frame.OnRemove = function()
 			missingModuleDialog = nil
 		end
 
+		local branchInfo = vgui.Create('DLabel', frame)
+		branchInfo:Dock(TOP)
+		branchInfo:DockMargin(12, 12, 12, 0)
+		branchInfo:SetWrap(true)
+		branchInfo:SetAutoStretchVertical(true)
+		branchInfo:SetText(string.format(
+			language.GetPhrase('sw2.missing_module_info'),
+			branch_name,
+			bits,
+			BRANCH,
+			jit.version,
+			language.GetPhrase('sw2.supported.main32'),
+			language.GetPhrase('sw2.supported.x86_64_32'),
+			language.GetPhrase('sw2.supported.x86_64_64')
+		))
+
 		local help = vgui.Create('DLabel', frame)
 		help:Dock(TOP)
-		help:DockMargin(12, 12, 12, 0)
+		help:DockMargin(12, 8, 12, 0)
 		help:SetWrap(true)
 		help:SetAutoStretchVertical(true)
 		help:SetText(string.format(language.GetPhrase('sw2.missing_module_help'), releaseURL))
@@ -130,11 +167,68 @@ if CLIENT then
 		end
 	end
 
+
+	function SimpleWoundUIShowBranchDialog()
+		if IsValid(missingModuleDialog) then
+			missingModuleDialog:Center()
+			missingModuleDialog:MakePopup()
+			return
+		end
+
+		local bits
+		if jit.version == 'LuaJIT 2.0.4' then
+			bits = language.GetPhrase('sw2.bitness.32')
+		elseif jit.version == 'LuaJIT 2.1.0-beta3' then
+			bits = language.GetPhrase('sw2.bitness.64')
+		else
+			bits = language.GetPhrase('sw2.bitness.unknown')
+		end
+
+		local branch_name
+		if BRANCH == 'unknown' then
+			branch_name = language.GetPhrase('sw2.branch.main')
+		elseif BRANCH == 'x86-64' then
+			branch_name = language.GetPhrase('sw2.branch.x86_64')
+		else
+			branch_name = BRANCH
+		end
+
+		local frame = vgui.Create('DFrame')
+		missingModuleDialog = frame
+
+		frame:SetTitle(language.GetPhrase('#sw2.branch_mismatch'))
+		frame:SetSize(560, 300)
+		frame:Center()
+		frame:MakePopup()
+		frame.OnRemove = function()
+			missingModuleDialog = nil
+		end
+
+		local branchInfo = vgui.Create('DLabel', frame)
+		branchInfo:Dock(TOP)
+		branchInfo:DockMargin(12, 12, 12, 0)
+		branchInfo:SetWrap(true)
+		branchInfo:SetAutoStretchVertical(true)
+		branchInfo:SetText(string.format(
+			language.GetPhrase('sw2.branch_mismatch_help') .. '\n\n' ..
+			language.GetPhrase('sw2.missing_module_info'),
+			branch_name,
+			bits,
+			BRANCH,
+			jit.version,
+			language.GetPhrase('sw2.supported.main32'),
+			language.GetPhrase('sw2.supported.x86_64_32'),
+			language.GetPhrase('sw2.supported.x86_64_64')
+		))
+	end
+
     local modulename_main = 'simple_wound'
 	local modulename_x86_x64 = 'simple_wound_x86_x64'
 
     if not util.IsBinaryModuleInstalled(modulename_x86_x64) and not util.IsBinaryModuleInstalled(modulename_main) then
+		-- 标记为缺失模块
         ErrorNoHalt(string.format('[Simple Wound]: %s\n', language.GetPhrase('sw2.missing_module')))
+		hook.Add('InitPostEntity', 'SimpleWoundShowHelpDialog', SimpleWoundUIShowMissingModuleDialog)
         return
     end
 
@@ -145,6 +239,8 @@ if CLIENT then
 		if not success then
 			ErrorNoHalt(string.format('[Simple Wound]: %s\n', err))
 			print('Only supported on:\n-- main branch 32-bit\n-- x86_x64 branch 32-bit\n-- x86_x64 branch 64-bit')
+			-- 标记为不支持的分支
+			hook.Add('InitPostEntity', 'SimpleWoundShowHelpDialog', SimpleWoundUIShowBranchDialog)
 			return
 		else
 			print('[Simple Wound]: x86_x64 module installed')

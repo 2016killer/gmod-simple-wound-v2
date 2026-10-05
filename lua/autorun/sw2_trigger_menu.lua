@@ -5,12 +5,6 @@ if CLIENT then
 		spawnmenu.AddToolMenuOption('Utilities', language.GetPhrase('#sw2.category'), 'SimpleWoundTrigger', language.GetPhrase('#sw2.trigger_menu'), '', '', function(panel)
 			panel:Clear()
 			
-			if not SimpleWound then
-				SimpleWoundUIShowMissingModuleDialog()
-				return
-			end
-
-
 			local items = {
 				'models/flesh',
 				'models/props_c17/paper01',

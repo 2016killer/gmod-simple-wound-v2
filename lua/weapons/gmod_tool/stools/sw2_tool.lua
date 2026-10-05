@@ -178,12 +178,6 @@ if CLIENT then
 	TOOL.ClientConVar['litegorec'] = '0'
 
 	function TOOL.BuildCPanel(panel)
-		if not SimpleWound then
-			SimpleWoundUIShowMissingModuleDialog()
-			return
-		end
-
-
 
 		local ctrl = vgui.Create('ControlPresets', panel)
 		ctrl:SetPreset('sw2_tool')
@@ -597,7 +591,7 @@ if CLIENT then
 	end
 
 	local errmsg = language.GetPhrase('#sw2.missing_module')
-	local msg = language.GetPhrase('sw2.version_hint') .. (SimpleWound and SimpleWound.Version or '?')
+	local msg = 'Lua Addon V:' .. (SimpleWound and SimpleWound.Version or '?')
 	local msg_wound_slot = language.GetPhrase('sw2.wound_slot')
 	function TOOL:DrawToolScreen(width, height)
 		-- 错误提示
