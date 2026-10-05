@@ -91,13 +91,13 @@ local SW_DISABLED_ELLIPSOID = SWEllipsoid.new(SW_DISABLED_CENTER, SW_DISABLED_AN
 -- ====================== 数据结构 ======================
 
 if CLIENT then
-	local missingModuleDialog
+	local tooltipDialog
 
 
-	function SimpleWoundUIShowMissingModuleDialog()
-		if IsValid(missingModuleDialog) then
-			missingModuleDialog:Center()
-			missingModuleDialog:MakePopup()
+	local function Tooltip_MissingModule()
+		if IsValid(tooltipDialog) then
+			tooltipDialog:Center()
+			tooltipDialog:MakePopup()
 			return
 		end
 
@@ -124,14 +124,14 @@ if CLIENT then
 		end
 
 		local frame = vgui.Create('DFrame')
-		missingModuleDialog = frame
+		tooltipDialog = frame
 
 		frame:SetTitle(language.GetPhrase('#sw2.missing_module'))
 		frame:SetSize(560, 340)
 		frame:Center()
 		frame:MakePopup()
 		frame.OnRemove = function()
-			missingModuleDialog = nil
+			tooltipDialog = nil
 		end
 
 		local branchInfo = vgui.Create('DLabel', frame)
@@ -168,10 +168,10 @@ if CLIENT then
 	end
 
 
-	function SimpleWoundUIShowBranchDialog()
-		if IsValid(missingModuleDialog) then
-			missingModuleDialog:Center()
-			missingModuleDialog:MakePopup()
+	local function Tooltip_BranchMismatch()
+		if IsValid(tooltipDialog) then
+			tooltipDialog:Center()
+			tooltipDialog:MakePopup()
 			return
 		end
 
@@ -194,14 +194,14 @@ if CLIENT then
 		end
 
 		local frame = vgui.Create('DFrame')
-		missingModuleDialog = frame
+		tooltipDialog = frame
 
 		frame:SetTitle(language.GetPhrase('#sw2.branch_mismatch'))
 		frame:SetSize(560, 300)
 		frame:Center()
 		frame:MakePopup()
 		frame.OnRemove = function()
-			missingModuleDialog = nil
+			tooltipDialog = nil
 		end
 
 		local branchInfo = vgui.Create('DLabel', frame)
@@ -228,7 +228,7 @@ if CLIENT then
     if not util.IsBinaryModuleInstalled(modulename_x86_x64) and not util.IsBinaryModuleInstalled(modulename_main) then
 		-- 标记为缺失模块
         ErrorNoHalt(string.format('[Simple Wound]: %s\n', language.GetPhrase('sw2.missing_module')))
-		hook.Add('InitPostEntity', 'SimpleWoundShowHelpDialog', SimpleWoundUIShowMissingModuleDialog)
+		hook.Add('InitPostEntity', 'SimpleWoundShowTooltip', Tooltip_MissingModule)
         return
     end
 
@@ -240,7 +240,7 @@ if CLIENT then
 			ErrorNoHalt(string.format('[Simple Wound]: %s\n', err))
 			print('Only supported on:\n-- main branch 32-bit\n-- x86_x64 branch 32-bit\n-- x86_x64 branch 64-bit')
 			-- 标记为不支持的分支
-			hook.Add('InitPostEntity', 'SimpleWoundShowHelpDialog', SimpleWoundUIShowBranchDialog)
+			hook.Add('InitPostEntity', 'SimpleWoundShowTooltip', Tooltip_BranchMismatch)
 			return
 		else
 			print('[Simple Wound]: x86_x64 module installed')
