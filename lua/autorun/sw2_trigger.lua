@@ -231,6 +231,7 @@ local sw_trigger_enable = CreateConVar('sw_trigger_enable', '1', {FCVAR_ARCHIVE,
 local sw_trigger_on_death = CreateConVar('sw_trigger_on_death', '0', {FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_CLIENTCMD_CAN_EXECUTE}, '')
 local sw_trigger_ragdoll = CreateConVar('sw_trigger_ragdoll', '1', {FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_CLIENTCMD_CAN_EXECUTE}, '')
 local sw_trigger_clientside_corpse = CreateConVar('sw_trigger_clientside_corpse', '1', {FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_CLIENTCMD_CAN_EXECUTE}, '')
+local sw_trigger_damage_threshold = CreateConVar('sw_trigger_damage_threshold', '5', {FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED, FCVAR_CLIENTCMD_CAN_EXECUTE}, '')
 
 
 if SERVER then
@@ -314,6 +315,10 @@ if SERVER then
 		-- 伤口参数初始化
 		if not IsValid(npc) or not sw_trigger_enable:GetBool() then 
 			return 
+		end
+
+		if dmginfo:GetDamage() < sw_trigger_damage_threshold:GetInt() then
+			return
 		end
 
 		local wound = {

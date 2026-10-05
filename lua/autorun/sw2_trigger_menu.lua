@@ -38,6 +38,7 @@ if CLIENT then
 			)
 			
 			panel:NumSlider('#tool.sw2_tool.blood_scale', 'sw_trigger_blood_scale', 0, 1, 2)
+			panel:NumSlider('#sw2.trigger_damage_threshold', 'sw_trigger_damage_threshold', 0, 200, 0)
 
 			panel:Help('#tool.sw2_tool.deform_texture')
 			local MatSelect = vgui.Create('MatSelect', panel)
