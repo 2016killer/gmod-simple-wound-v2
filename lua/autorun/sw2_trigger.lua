@@ -122,6 +122,7 @@ end
 
 SimpleWoundTrigger.GetWoundScale = function(ent, hitgroup, dmgtype)
 	-- print("获取伤口缩放: 实体=", ent, "命中部位=", hitgroup, "伤害类型=", dmgtype)
+	local dmgtypefiltered = bit.band(dmgtype, bit.bnot(bit.bor(DMG_ALWAYSGIB, DMG_NEVERGIB)))
 	local groupTable = SimpleWoundTrigger.WoundScaleTable[hitgroup]
 	if not groupTable then
 		return nil
