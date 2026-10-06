@@ -343,9 +343,9 @@ if SERVER then
 		end
 	end)
 
-	hook.Add('EntityTakeDamage', 'SimpleWoundTriggerRagdoll', function(ent, dmginfo)
+	hook.Add('PostEntityTakeDamage', 'SimpleWoundTriggerRagdoll', function(ent, dmginfo, wasDamageTaken)
 		-- 玩家伤口在这里触发
-		if not IsValid(ent) or (not ent:IsRagdoll() and not ent:IsPlayer()) then
+		if not wasDamageTaken or not IsValid(ent) or (not ent:IsRagdoll() and not ent:IsPlayer()) then
 			return
 		end
 
@@ -354,6 +354,10 @@ if SERVER then
 		end
 
 		if ent:IsPlayer() and not sw_trigger_player:GetBool() then
+			return
+		end
+
+		if dmginfo:GetDamage() < sw_trigger_damage_threshold:GetInt() then
 			return
 		end
 
