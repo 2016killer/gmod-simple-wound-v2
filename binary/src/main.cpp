@@ -7,7 +7,7 @@
 
 using namespace GarrysMod::Lua;
 
-static const char* SIMPLE_WOUND_VERSION = "2.0.1";
+static const char* SIMPLE_WOUND_VERSION = "2.0.2";
 
 LUA_FUNCTION(SimpleWoundGetVersion) {
 	LUA->PushString(SIMPLE_WOUND_VERSION);
