@@ -591,8 +591,9 @@ if CLIENT then
 	end
 
 	local errmsg = language.GetPhrase('#sw2.missing_module')
-	local msg = 'Lua Addon V:' .. (SimpleWound and SimpleWound.Version or '?')
-	local msg_wound_slot = language.GetPhrase('sw2.wound_slot')
+	local msg_lua_version = 'AddonV: ' .. (SimpleWound and SimpleWound.Version or '?')
+	local msg_bin_version = 'BinV: ' .. (SimpleWound and SimpleWound.BinVersion or '?')
+	local msg_wound_slot = 'WoundSlot: '
 	function TOOL:DrawToolScreen(width, height)
 		-- 错误提示
 		if not SimpleWound then
@@ -615,7 +616,7 @@ if CLIENT then
 			surface.DrawRect(0, 0, width, height)
 
 			draw.SimpleText(
-				msg, 
+				msg_lua_version, 
 				'DermaLarge', 
 				0, 
 				0, 
@@ -625,10 +626,20 @@ if CLIENT then
 			)
 
 			draw.SimpleText(
-				msg_wound_slot .. (WoundSlot or 1), 
+				msg_bin_version, 
 				'DermaLarge', 
 				0, 
 				40, 
+				Color(0, 255, 0, 255), 
+				TEXT_ALIGN_LEFT, 
+				TEXT_ALIGN_TOP 
+			)
+
+			draw.SimpleText(
+				msg_wound_slot .. (WoundSlot or 1), 
+				'DermaLarge', 
+				0, 
+				120, 
 				Color(0, 255, 0, 255), 
 				TEXT_ALIGN_LEFT, 
 				TEXT_ALIGN_TOP 

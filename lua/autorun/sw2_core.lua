@@ -252,6 +252,9 @@ if CLIENT then
     SimpleWound = SimpleWound or {}
 	SimpleWound.MaxWounds = 3
     SimpleWound.Version = '2.0.1'
+	SimpleWound.BinVersion = isfunction(SimpleWoundGetVersion) and SimpleWoundGetVersion() or '<= 2.0.1'
+	
+	print('[Simple Wound]: Bin VERSION ' .. SimpleWound.BinVersion)
     print('[Simple Wound]: LUA VERSION ' .. SimpleWound.Version)
 
     SimpleWound.MaterialsCache = {}
