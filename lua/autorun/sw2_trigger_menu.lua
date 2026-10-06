@@ -23,6 +23,11 @@ if CLIENT then
 			)
 
 			panel:CheckBox(
+				'#sw2.trigger_player',
+				'sw_trigger_player'
+			)
+
+			panel:CheckBox(
 				'#sw2.trigger_ragdoll',
 				'sw_trigger_ragdoll'
 			)
