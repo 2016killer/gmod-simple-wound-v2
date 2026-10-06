@@ -127,7 +127,7 @@ SimpleWoundTrigger.GetWoundScale = function(ent, hitgroup, dmgtype)
 	if not groupTable then
 		return nil
 	else
-		return groupTable[dmgtype]
+		return groupTable[dmgtypefiltered]
 	end
 end
 
@@ -313,6 +313,7 @@ if SERVER then
 	end
 
 	hook.Add('ScaleNPCDamage', 'SimpleWoundTrigger' , function(npc, hitgroup, dmginfo)
+		-- NPC伤口在这里触发
 		-- 伤口参数初始化
 		if not IsValid(npc) or not sw_trigger_enable:GetBool() then 
 			return 
@@ -342,7 +343,8 @@ if SERVER then
 	end)
 
 	hook.Add('EntityTakeDamage', 'SimpleWoundTriggerRagdoll', function(ent, dmginfo)
-		if not IsValid(ent) or not ent:IsRagdoll() then
+		-- 玩家伤口在这里触发
+		if not IsValid(ent) or (not ent:IsRagdoll() and not ent:IsPlayer()) then
 			return
 		end
 
@@ -352,10 +354,26 @@ if SERVER then
 
 		local pos = dmginfo:GetDamagePosition()
 		local hitgroup = SimpleWoundTrigger.GetHitGroupByPosition(ent, pos)
-		Apply(ent, pos, -dmginfo:GetDamageForce(), hitgroup, dmginfo:GetDamageType())
+		local dir = -dmginfo:GetDamageForce()
+		local dmgtype = dmginfo:GetDamageType()
+
+		if ent:IsPlayer() then
+			AddPendingWound(ent, {
+				pos = pos,
+				dir = dir,
+				dmg = dmginfo:GetDamage(),
+				dmgtype = dmgtype,
+				hitgroup = hitgroup
+			})
+
+			SyncClientsideWound(ent, pos, dir, hitgroup, dmgtype)
+		end
+
+		Apply(ent, pos, dir, hitgroup, dmgtype)
 	end)
 
 	hook.Add('CreateEntityRagdoll', 'SimpleWoundTrigger', function(ent, rag)
+		-- print("创建 ragdoll 实体:", ent, "ragdoll:", rag)
 		local applied_count = 0
 		local woundparams = ent.sw_trigger_params
 
@@ -540,6 +558,7 @@ if CLIENT then
 	end)
 
 	hook.Add('CreateClientsideRagdoll', 'SimpleWoundTrigger', function(entity, ragdoll)
+		-- print("创建 ragdoll 实体:", entity, "ragdoll:", ragdoll)
 		if not IsValid(entity) or not IsValid(ragdoll) then
 			return
 		end
@@ -603,3 +622,13 @@ if CLIENT then
 		end)
 	end)
 end
+
+hook.Add('PlayerSpawn', 'SimpleWoundTriggerReset', function(ply)
+	if SERVER then
+		ply.sw_trigger_params = nil
+	else
+		SimpleWoundTrigger.ClientWoundData[ply] = nil
+	end
+
+	SimpleWound.Reset(ply)
+end)
