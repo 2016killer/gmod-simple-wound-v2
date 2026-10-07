@@ -344,16 +344,11 @@ if SERVER then
 	end)
 
 	hook.Add('PostEntityTakeDamage', 'SimpleWoundTriggerRagdoll', function(ent, dmginfo, wasDamageTaken)
-		-- 玩家伤口在这里触发
-		if not wasDamageTaken or not IsValid(ent) or (not ent:IsRagdoll() and not ent:IsPlayer()) then
+		if not wasDamageTaken or not IsValid(ent) or not ent:IsRagdoll() then
 			return
 		end
 
 		if not sw_trigger_enable:GetBool() or not sw_trigger_ragdoll:GetBool() then
-			return
-		end
-
-		if ent:IsPlayer() and not sw_trigger_player:GetBool() then
 			return
 		end
 
@@ -363,22 +358,36 @@ if SERVER then
 
 		local pos = dmginfo:GetDamagePosition()
 		local hitgroup = SimpleWoundTrigger.GetHitGroupByPosition(ent, pos)
-		local dir = -dmginfo:GetDamageForce()
-		local dmgtype = dmginfo:GetDamageType()
+		Apply(ent, pos, -dmginfo:GetDamageForce(), hitgroup, dmginfo:GetDamageType())
+	end)
 
-		if ent:IsPlayer() then
-			AddPendingWound(ent, {
-				pos = pos,
-				dir = dir,
-				dmg = dmginfo:GetDamage(),
-				dmgtype = dmgtype,
-				hitgroup = hitgroup
-			})
-
-			SyncClientsideWound(ent, pos, dir, hitgroup, dmgtype)
+	hook.Add('ScalePlayerDamage', 'SimpleWoundTriggerPlayer', function(ply, hitgroup, dmginfo)
+		if not IsValid(ply) then
+			return
 		end
 
-		Apply(ent, pos, dir, hitgroup, dmgtype)
+		if not sw_trigger_enable:GetBool() or not sw_trigger_player:GetBool() then
+			return
+		end
+
+		if dmginfo:GetDamage() < sw_trigger_damage_threshold:GetInt() then
+			return
+		end
+
+		local wound = {
+			pos = dmginfo:GetDamagePosition(),
+			dir = -dmginfo:GetDamageForce(),
+			dmg = dmginfo:GetDamage(),
+			dmgtype = dmginfo:GetDamageType(),
+			hitgroup = hitgroup
+		}
+
+		if not AddPendingWound(ply, wound) then
+			return
+		end
+
+		SyncClientsideWound(ply, wound.pos, wound.dir, wound.hitgroup, wound.dmgtype)
+		Apply(ply, wound.pos, wound.dir, wound.hitgroup, wound.dmgtype)
 	end)
 
 	hook.Add('CreateEntityRagdoll', 'SimpleWoundTrigger', function(ent, rag)
