@@ -235,6 +235,11 @@ if CLIENT then
 
 		panel:Help('')
 
+		panel:CheckBox(
+			'#tool.sw2_tool.litegorec', 
+			'sw2_tool_litegorec'
+		)
+
 		local items = {
 			'models/flesh',
 			'models/props_c17/paper01',
@@ -242,6 +247,10 @@ if CLIENT then
 			'models/props_wasteland/wood_fence01a',
 			'simple_wound/alienflesh'
 		}
+
+		for k, material in pairs(list.Get("OverrideMaterials")) do
+			table.insert(items, material)
+		end
 
 		panel:Help('#tool.sw2_tool.deform_texture')
 		local MatSelect2 = vgui.Create('MatSelect', panel)
@@ -275,11 +284,6 @@ if CLIENT then
 		for k, material in pairs(items) do
 			MatSelect:AddMaterial(material, material)
 		end
-
-		panel:CheckBox(
-			'#tool.sw2_tool.litegorec', 
-			'sw2_tool_litegorec'
-		)
 
 	end
 

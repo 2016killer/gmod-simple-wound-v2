@@ -12,6 +12,11 @@ if CLIENT then
 				'models/props_wasteland/wood_fence01a',
 				'simple_wound/alienflesh'
 			}
+
+			for k, material in pairs(list.Get("OverrideMaterials")) do
+				table.insert(items, material)
+			end
+
 			panel:CheckBox(
 				'#Enable', 
 				'sw_trigger_enable'
