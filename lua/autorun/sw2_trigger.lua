@@ -221,6 +221,8 @@ if CLIENT then
 		),
 
 		["models/Combine_Strider.mdl"] = SWModelWoundParams.Disabled(),
+
+		["models/barnacle.mdl"] = SWModelWoundParams.Disabled(),
 	}
 end
 
